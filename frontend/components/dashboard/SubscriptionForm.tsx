@@ -33,6 +33,26 @@ const billingCycles = [
   { value: 'weekly', label: 'Weekly' },
 ];
 
+const paymentMethods = [
+  { value: '', label: 'Select payment method' },
+  { value: 'credit_card', label: 'Credit Card' },
+  { value: 'debit_card', label: 'Debit Card' },
+  { value: 'paypal', label: 'PayPal' },
+  { value: 'bank_transfer', label: 'Bank Transfer' },
+  { value: 'apple_pay', label: 'Apple Pay' },
+  { value: 'google_pay', label: 'Google Pay' },
+  { value: 'other', label: 'Other' },
+];
+
+const cardBrands = [
+  { value: '', label: 'Select card brand' },
+  { value: 'Visa', label: 'Visa' },
+  { value: 'Mastercard', label: 'Mastercard' },
+  { value: 'Amex', label: 'American Express' },
+  { value: 'Discover', label: 'Discover' },
+  { value: 'Other', label: 'Other' },
+];
+
 export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
   subscription,
   onSubmit,
@@ -50,6 +70,9 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
     isActive: true,
     reminderEnabled: true,
     reminderDaysBefore: 7,
+    paymentMethod: '',
+    lastFourDigits: '',
+    cardBrand: '',
   });
   
   const [loading, setLoading] = useState(false);
@@ -69,6 +92,9 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
         isActive: subscription.isActive,
         reminderEnabled: subscription.reminderEnabled,
         reminderDaysBefore: subscription.reminderDaysBefore,
+        paymentMethod: subscription.paymentMethod || '',
+        lastFourDigits: subscription.lastFourDigits || '',
+        cardBrand: subscription.cardBrand || '',
       });
     }
   }, [subscription]);
@@ -167,6 +193,33 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
         placeholder="https://example.com"
       />
+
+      <Select
+        label="Payment Method (Optional)"
+        value={formData.paymentMethod || ''}
+        onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+        options={paymentMethods}
+      />
+
+      {(formData.paymentMethod === 'credit_card' || formData.paymentMethod === 'debit_card') && (
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Last 4 Digits"
+            type="text"
+            maxLength={4}
+            value={formData.lastFourDigits || ''}
+            onChange={(e) => setFormData({ ...formData, lastFourDigits: e.target.value })}
+            placeholder="1234"
+          />
+
+          <Select
+            label="Card Brand"
+            value={formData.cardBrand || ''}
+            onChange={(e) => setFormData({ ...formData, cardBrand: e.target.value })}
+            options={cardBrands}
+          />
+        </div>
+      )}
 
       <div className="flex items-center space-x-6">
         <label className="flex items-center">

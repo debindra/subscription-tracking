@@ -14,6 +14,9 @@ export interface Subscription {
   isActive: boolean;
   reminderEnabled: boolean;
   reminderDaysBefore: number;
+  paymentMethod?: string;
+  lastFourDigits?: string;
+  cardBrand?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -30,6 +33,9 @@ export interface CreateSubscriptionData {
   isActive?: boolean;
   reminderEnabled?: boolean;
   reminderDaysBefore?: number;
+  paymentMethod?: string;
+  lastFourDigits?: string;
+  cardBrand?: string;
 }
 
 export const subscriptionsApi = {

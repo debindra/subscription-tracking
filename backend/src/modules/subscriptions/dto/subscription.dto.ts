@@ -50,6 +50,19 @@ export class CreateSubscriptionDto {
   @IsNumber()
   @Min(1)
   reminderDaysBefore?: number = 7;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['credit_card', 'debit_card', 'paypal', 'bank_transfer', 'apple_pay', 'google_pay', 'other'])
+  paymentMethod?: string;
+
+  @IsOptional()
+  @IsString()
+  lastFourDigits?: string;
+
+  @IsOptional()
+  @IsString()
+  cardBrand?: string;
 }
 
 export class UpdateSubscriptionDto {
@@ -99,5 +112,18 @@ export class UpdateSubscriptionDto {
   @IsNumber()
   @Min(1)
   reminderDaysBefore?: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['credit_card', 'debit_card', 'paypal', 'bank_transfer', 'apple_pay', 'google_pay', 'other'])
+  paymentMethod?: string;
+
+  @IsOptional()
+  @IsString()
+  lastFourDigits?: string;
+
+  @IsOptional()
+  @IsString()
+  cardBrand?: string;
 }
 
