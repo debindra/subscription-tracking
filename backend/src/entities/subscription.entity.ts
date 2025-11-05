@@ -47,6 +47,21 @@ export class Subscription {
   @Column({ default: 7 })
   reminderDaysBefore: number;
 
+  @Column({ nullable: true })
+  paymentMethod: string; // credit_card, debit_card, paypal, bank_transfer, apple_pay, google_pay, other
+
+  @Column({ nullable: true })
+  lastFourDigits: string;
+
+  @Column({ nullable: true })
+  cardBrand: string; // Visa, Mastercard, Amex, Discover, etc.
+
+  @Column({ default: false })
+  isTrial: boolean;
+
+  @Column({ type: 'date', nullable: true })
+  trialEndDate: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 
