@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { Subscription } from '@/lib/api/subscriptions';
-import { exportToCSV, exportSummaryToHTML, printHTML, downloadHTML } from '@/lib/utils/export';
+import { exportToCSV, exportSummaryToHTML, printHTML, downloadHTML, downloadPDFFromHTML } from '@/lib/utils/export';
 import { Button } from '../ui/Button';
+import { useToast } from '@/lib/context/ToastContext';
 
 interface ExportButtonProps {
   subscriptions: Subscription[];
@@ -17,36 +18,83 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
   yearlyTotal,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const { showToast } = useToast();
 
   const handleExportCSV = () => {
-    const timestamp = new Date().toISOString().split('T')[0];
-    exportToCSV(subscriptions, `subscriptions-${timestamp}.csv`);
-    setShowMenu(false);
+    try {
+      const timestamp = new Date().toISOString().split('T')[0];
+      exportToCSV(subscriptions, `subscriptions-${timestamp}.csv`);
+      showToast('CSV exported successfully', 'success');
+    } catch (e) {
+      showToast('Failed to export CSV', 'error');
+      // eslint-disable-next-line no-console
+      console.error('CSV export failed:', e);
+    } finally {
+      setShowMenu(false);
+    }
   };
 
   const handleExportHTML = () => {
-    const timestamp = new Date().toISOString().split('T')[0];
-    const htmlContent = exportSummaryToHTML({
-      subscriptions,
-      monthlyTotal,
-      yearlyTotal,
-      totalSubscriptions: subscriptions.length,
-      activeSubscriptions: subscriptions.filter(s => s.isActive).length,
-    });
-    downloadHTML(htmlContent, `subscription-report-${timestamp}.html`);
-    setShowMenu(false);
+    try {
+      const timestamp = new Date().toISOString().split('T')[0];
+      const htmlContent = exportSummaryToHTML({
+        subscriptions,
+        monthlyTotal,
+        yearlyTotal,
+        totalSubscriptions: subscriptions.length,
+        activeSubscriptions: subscriptions.filter(s => s.isActive).length,
+      });
+      downloadHTML(htmlContent, `subscription-report-${timestamp}.html`);
+      showToast('HTML report downloaded', 'success');
+    } catch (e) {
+      showToast('Failed to export HTML', 'error');
+      // eslint-disable-next-line no-console
+      console.error('HTML export failed:', e);
+    } finally {
+      setShowMenu(false);
+    }
   };
 
   const handlePrint = () => {
-    const htmlContent = exportSummaryToHTML({
-      subscriptions,
-      monthlyTotal,
-      yearlyTotal,
-      totalSubscriptions: subscriptions.length,
-      activeSubscriptions: subscriptions.filter(s => s.isActive).length,
-    });
-    printHTML(htmlContent);
-    setShowMenu(false);
+    try {
+      const htmlContent = exportSummaryToHTML({
+        subscriptions,
+        monthlyTotal,
+        yearlyTotal,
+        totalSubscriptions: subscriptions.length,
+        activeSubscriptions: subscriptions.filter(s => s.isActive).length,
+      });
+      printHTML(htmlContent);
+      showToast('Opening print dialog…', 'info');
+    } catch (e) {
+      showToast('Failed to open print dialog', 'error');
+      // eslint-disable-next-line no-console
+      console.error('Print failed:', e);
+    } finally {
+      setShowMenu(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      showToast('Generating PDF…', 'info');
+      const timestamp = new Date().toISOString().split('T')[0];
+      const htmlContent = exportSummaryToHTML({
+        subscriptions,
+        monthlyTotal,
+        yearlyTotal,
+        totalSubscriptions: subscriptions.length,
+        activeSubscriptions: subscriptions.filter(s => s.isActive).length,
+      });
+      await downloadPDFFromHTML(htmlContent, `subscription-report-${timestamp}.pdf`);
+      showToast('PDF exported successfully', 'success');
+    } catch (e) {
+      showToast('Failed to export PDF', 'error');
+      // eslint-disable-next-line no-console
+      console.error('PDF export failed:', e);
+    } finally {
+      setShowMenu(false);
+    }
   };
 
   return (
@@ -88,6 +136,16 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
               <span>Export as HTML</span>
+            </button>
+            
+            <button
+              onClick={handleExportPDF}
+              className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center space-x-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0-1.657 0-2.486.293-3.121a3 3 0 011.586-1.586C14.514 6 15.343 6 17 6h1a2 2 0 012 2v8a2 2 0 01-2 2H7m5-7H7m5 0v6m0-6l-3 3" />
+              </svg>
+              <span>Export as PDF</span>
             </button>
             
             <button

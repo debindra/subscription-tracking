@@ -73,6 +73,8 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
     paymentMethod: '',
     lastFourDigits: '',
     cardBrand: '',
+    isTrial: false,
+    trialEndDate: '',
   });
   
   const [loading, setLoading] = useState(false);
@@ -95,6 +97,8 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
         paymentMethod: subscription.paymentMethod || '',
         lastFourDigits: subscription.lastFourDigits || '',
         cardBrand: subscription.cardBrand || '',
+        isTrial: subscription.isTrial || false,
+        trialEndDate: subscription.trialEndDate ? subscription.trialEndDate.split('T')[0] : '',
       });
     }
   }, [subscription]);
@@ -241,6 +245,16 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
           />
           <span className="ml-2 text-sm text-gray-700">Enable Reminders</span>
         </label>
+
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.isTrial || false}
+            onChange={(e) => setFormData({ ...formData, isTrial: e.target.checked })}
+            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+          />
+          <span className="ml-2 text-sm text-gray-700">This is a trial</span>
+        </label>
       </div>
 
       {formData.reminderEnabled && (
@@ -251,6 +265,16 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
           max="30"
           value={formData.reminderDaysBefore}
           onChange={(e) => setFormData({ ...formData, reminderDaysBefore: parseInt(e.target.value) })}
+        />
+      )}
+
+      {formData.isTrial && (
+        <Input
+          label="Trial End Date"
+          type="date"
+          value={formData.trialEndDate || ''}
+          onChange={(e) => setFormData({ ...formData, trialEndDate: e.target.value })}
+          required
         />
       )}
 

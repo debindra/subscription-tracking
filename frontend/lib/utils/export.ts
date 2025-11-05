@@ -259,3 +259,74 @@ export function downloadHTML(htmlContent: string, filename: string = 'subscripti
   document.body.removeChild(link);
 }
 
+// Generate a PDF from the provided HTML content using html2canvas + jsPDF
+export async function downloadPDFFromHTML(htmlContent: string, filename: string = 'subscription-report.pdf') {
+  // Dynamically import to avoid SSR issues
+  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+    import('html2canvas'),
+    import('jspdf') as unknown as Promise<{ jsPDF: any }>,
+  ]);
+
+  // Create a hidden container to render HTML for capture
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.top = '0';
+  container.style.width = '794px'; // A4 width at 96 DPI approx
+  container.style.background = '#ffffff';
+  container.innerHTML = htmlContent;
+  document.body.appendChild(container);
+
+  const canvas = await html2canvas(container as HTMLElement, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    windowWidth: 794,
+  });
+
+  const pdf = new jsPDF('p', 'pt', 'a4');
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+
+  // Scale image to fit page width (points). Compute how many canvas pixels fit per PDF page in height.
+  const imgWidth = pageWidth;
+  const scale = imgWidth / canvas.width; // points per pixel horizontally
+  const pageHeightInPixels = Math.floor(pageHeight / scale); // pixels that fit vertically per page
+
+  // Slice the big canvas into page-height chunks and render each as an image
+  let offset = 0;
+  let pageIndex = 0;
+  while (offset < canvas.height) {
+    const sliceHeight = Math.min(pageHeightInPixels, canvas.height - offset);
+    const pageCanvas = document.createElement('canvas');
+    pageCanvas.width = canvas.width;
+    pageCanvas.height = sliceHeight;
+    const ctx = pageCanvas.getContext('2d');
+    if (!ctx) break;
+
+    ctx.drawImage(
+      canvas,
+      0,
+      offset,
+      canvas.width,
+      sliceHeight,
+      0,
+      0,
+      pageCanvas.width,
+      pageCanvas.height
+    );
+
+    const pageImgData = pageCanvas.toDataURL('image/png');
+    const pageImgHeightPts = sliceHeight * scale; // convert pixels to points using same scale
+
+    if (pageIndex > 0) pdf.addPage();
+    pdf.addImage(pageImgData, 'PNG', 0, 0, imgWidth, pageImgHeightPts);
+
+    offset += sliceHeight;
+    pageIndex += 1;
+  }
+
+  pdf.save(filename);
+  document.body.removeChild(container);
+}
+

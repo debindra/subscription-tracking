@@ -17,6 +17,8 @@ export interface Subscription {
   paymentMethod?: string;
   lastFourDigits?: string;
   cardBrand?: string;
+  isTrial: boolean;
+  trialEndDate?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,6 +38,8 @@ export interface CreateSubscriptionData {
   paymentMethod?: string;
   lastFourDigits?: string;
   cardBrand?: string;
+  isTrial?: boolean;
+  trialEndDate?: string;
 }
 
 export const subscriptionsApi = {

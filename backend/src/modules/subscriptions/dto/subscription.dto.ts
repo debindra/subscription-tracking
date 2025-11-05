@@ -63,6 +63,14 @@ export class CreateSubscriptionDto {
   @IsOptional()
   @IsString()
   cardBrand?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isTrial?: boolean = false;
+
+  @IsOptional()
+  @IsDateString()
+  trialEndDate?: string;
 }
 
 export class UpdateSubscriptionDto {
@@ -125,5 +133,13 @@ export class UpdateSubscriptionDto {
   @IsOptional()
   @IsString()
   cardBrand?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isTrial?: boolean;
+
+  @IsOptional()
+  @IsDateString()
+  trialEndDate?: string;
 }
 

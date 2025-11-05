@@ -56,6 +56,12 @@ export class Subscription {
   @Column({ nullable: true })
   cardBrand: string; // Visa, Mastercard, Amex, Discover, etc.
 
+  @Column({ default: false })
+  isTrial: boolean;
+
+  @Column({ type: 'date', nullable: true })
+  trialEndDate: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

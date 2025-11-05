@@ -19,26 +19,33 @@ self.addEventListener('install', (event) => {
 
 // Cache and return requests
 self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  const requestUrl = new URL(request.url);
+  const isSameOrigin = requestUrl.origin === self.location.origin;
+  const isGet = request.method === 'GET';
+
+  // Bypass service worker for non-GET or cross-origin requests (avoids CORS/preflight issues)
+  if (!isGet || !isSameOrigin) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Cache-first strategy for same-origin GET requests only
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Cache hit - return response
-      if (response) {
-        return response;
+    caches.match(request).then((cached) => {
+      if (cached) {
+        return cached;
       }
-      return fetch(event.request).then((response) => {
-        // Check if valid response
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+      return fetch(request).then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          return networkResponse;
         }
 
-        // Clone the response
-        const responseToCache = response.clone();
-
+        const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+          cache.put(request, responseToCache);
         });
-
-        return response;
+        return networkResponse;
       });
     })
   );

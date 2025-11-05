@@ -15,6 +15,14 @@ export default function SubscriptionsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | undefined>();
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState<string>('all');
+  const [billing, setBilling] = useState<'all' | Subscription['billingCycle']>('all');
+  const [priceMin, setPriceMin] = useState<string>('');
+  const [priceMax, setPriceMax] = useState<string>('');
+  const [trial, setTrial] = useState<'all' | 'trial' | 'nontrial'>('all');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -88,8 +96,38 @@ export default function SubscriptionsPage() {
   };
 
   const filteredSubscriptions = subscriptions.filter((sub) => {
-    if (filter === 'active') return sub.isActive;
-    if (filter === 'inactive') return !sub.isActive;
+    // status filter
+    if (filter === 'active' && !sub.isActive) return false;
+    if (filter === 'inactive' && sub.isActive) return false;
+    // search filter
+    const q = search.trim().toLowerCase();
+    if (q) {
+      const haystack = `${sub.name} ${sub.category} ${sub.description || ''}`.toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    // category filter
+    if (category !== 'all' && sub.category !== category) return false;
+    // billing cycle filter
+    if (billing !== 'all' && sub.billingCycle !== billing) return false;
+    // price range filter
+    const min = priceMin ? parseFloat(priceMin) : undefined;
+    const max = priceMax ? parseFloat(priceMax) : undefined;
+    if (typeof min === 'number' && sub.amount < min) return false;
+    if (typeof max === 'number' && sub.amount > max) return false;
+    // trial filter
+    if (trial === 'trial' && !sub.isTrial) return false;
+    if (trial === 'nontrial' && sub.isTrial) return false;
+    // next renewal date range filter
+    if (dateFrom) {
+      const from = new Date(dateFrom).getTime();
+      const next = new Date(sub.nextRenewalDate).getTime();
+      if (next < from) return false;
+    }
+    if (dateTo) {
+      const to = new Date(dateTo).getTime();
+      const next = new Date(sub.nextRenewalDate).getTime();
+      if (next > to) return false;
+    }
     return true;
   });
 
@@ -178,7 +216,16 @@ export default function SubscriptionsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex space-x-2">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        {/* Search */}
+        <input
+          type="text"
+          placeholder="Search name, category, description..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+
         <button
           onClick={() => setFilter('all')}
           className={`px-4 py-2 rounded-lg transition-colors ${
@@ -209,6 +256,77 @@ export default function SubscriptionsPage() {
         >
           Inactive ({subscriptions.filter((s) => !s.isActive).length})
         </button>
+      </div>
+
+      {/* Advanced Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          <option value="all">All Categories</option>
+          {Array.from(new Set(subscriptions.map((s) => s.category))).sort().map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+
+        <select
+          value={billing}
+          onChange={(e) => setBilling(e.target.value as any)}
+          className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          <option value="all">All Billing Cycles</option>
+          <option value="monthly">Monthly</option>
+          <option value="quarterly">Quarterly</option>
+          <option value="yearly">Yearly</option>
+          <option value="weekly">Weekly</option>
+        </select>
+      </div>
+
+      {/* Enhanced Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            type="number"
+            placeholder="Min price"
+            value={priceMin}
+            onChange={(e) => setPriceMin(e.target.value)}
+            className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <input
+            type="number"
+            placeholder="Max price"
+            value={priceMax}
+            onChange={(e) => setPriceMax(e.target.value)}
+            className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
+        <select
+          value={trial}
+          onChange={(e) => setTrial(e.target.value as any)}
+          className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          <option value="all">All Trials</option>
+          <option value="trial">Trials only</option>
+          <option value="nontrial">Non-trials</option>
+        </select>
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            type="date"
+            placeholder="From"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <input
+            type="date"
+            placeholder="To"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
       </div>
 
       {/* Subscriptions Grid */}
