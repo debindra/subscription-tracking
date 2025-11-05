@@ -22,6 +22,7 @@ const categories = [
   'Communication',
   'Security',
   'Finance',
+  'Education',
   'Other',
 ];
 
@@ -122,6 +123,7 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
             { value: 'USD', label: 'USD ($)' },
             { value: 'EUR', label: 'EUR (€)' },
             { value: 'GBP', label: 'GBP (£)' },
+            { value: 'NPR', label: 'NPR (रू)' },
           ]}
         />
       </div>
