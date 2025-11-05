@@ -125,6 +125,28 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
           </a>
         )}
 
+        {/* Payment Method */}
+        {subscription.paymentMethod && (
+          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <span>💳</span>
+            <span>
+              {subscription.paymentMethod === 'credit_card' && 'Credit Card'}
+              {subscription.paymentMethod === 'debit_card' && 'Debit Card'}
+              {subscription.paymentMethod === 'paypal' && 'PayPal'}
+              {subscription.paymentMethod === 'bank_transfer' && 'Bank Transfer'}
+              {subscription.paymentMethod === 'apple_pay' && 'Apple Pay'}
+              {subscription.paymentMethod === 'google_pay' && 'Google Pay'}
+              {subscription.paymentMethod === 'other' && 'Other'}
+            </span>
+            {subscription.lastFourDigits && (
+              <span>•••• {subscription.lastFourDigits}</span>
+            )}
+            {subscription.cardBrand && (
+              <span>({subscription.cardBrand})</span>
+            )}
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex space-x-2 pt-4 border-t dark:border-gray-700">
           <button
