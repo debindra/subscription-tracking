@@ -21,59 +21,59 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   const isOverdue = daysUntilRenewal < 0;
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="hover:shadow-lg dark:hover:shadow-gray-900/50 transition-shadow">
       <div className="flex justify-between items-start">
         <div className="flex-1">
           <div className="flex items-center space-x-2">
-            <h3 className="text-lg font-semibold text-gray-900">{subscription.name}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{subscription.name}</h3>
             {!subscription.isActive && (
-              <span className="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-600">
+              <span className="px-2 py-1 text-xs rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                 Inactive
               </span>
             )}
           </div>
           
-          <p className="text-sm text-gray-500 mt-1">{subscription.category}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subscription.category}</p>
           
           <div className="mt-3">
-            <p className="text-2xl font-bold text-primary-600">
+            <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">
               {formatCurrency(subscription.amount, subscription.currency)}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               per {subscription.billingCycle.replace('ly', '')}
             </p>
           </div>
           
           <div className="mt-4 space-y-1">
             <div className="flex items-center text-sm">
-              <span className="text-gray-600">Next renewal:</span>
-              <span className={`ml-2 font-medium ${isOverdue ? 'text-red-600' : isUpcoming ? 'text-orange-600' : 'text-gray-900'}`}>
+              <span className="text-gray-600 dark:text-gray-400">Next renewal:</span>
+              <span className={`ml-2 font-medium ${isOverdue ? 'text-red-600 dark:text-red-400' : isUpcoming ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-gray-100'}`}>
                 {formatDate(subscription.nextRenewalDate)}
               </span>
             </div>
             
             {daysUntilRenewal >= 0 && (
-              <p className={`text-xs ${isUpcoming ? 'text-orange-600 font-medium' : 'text-gray-500'}`}>
+              <p className={`text-xs ${isUpcoming ? 'text-orange-600 dark:text-orange-400 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                 {daysUntilRenewal === 0 ? 'Renews today!' : `${daysUntilRenewal} days away`}
               </p>
             )}
             
             {isOverdue && (
-              <p className="text-xs text-red-600 font-medium">
+              <p className="text-xs text-red-600 dark:text-red-400 font-medium">
                 Overdue by {Math.abs(daysUntilRenewal)} days
               </p>
             )}
           </div>
           
           {subscription.description && (
-            <p className="mt-3 text-sm text-gray-600">{subscription.description}</p>
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">{subscription.description}</p>
           )}
         </div>
         
         <div className="flex flex-col space-y-2 ml-4">
           <button
             onClick={() => onEdit(subscription)}
-            className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+            className="p-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
             title="Edit"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +83,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
           
           <button
             onClick={() => onDelete(subscription.id)}
-            className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
             title="Delete"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

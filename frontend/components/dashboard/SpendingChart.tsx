@@ -87,23 +87,23 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Spending by Category</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Spending by Category</h3>
         <div className="h-64 flex items-center justify-center">
           {categoryData.length > 0 ? (
             <Pie data={pieData} />
           ) : (
-            <p className="text-gray-500">No data available</p>
+            <p className="text-gray-500 dark:text-gray-400">No data available</p>
           )}
         </div>
       </Card>
 
       <Card>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Trend</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Monthly Trend</h3>
         <div className="h-64">
           {monthlyData.length > 0 ? (
             <Bar data={barData} options={barOptions} />
           ) : (
-            <p className="text-gray-500">No data available</p>
+            <p className="text-gray-500 dark:text-gray-400">No data available</p>
           )}
         </div>
       </Card>
