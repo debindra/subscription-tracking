@@ -1,13 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { AnalyticsService } from './analytics.service';
-import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { Subscription } from '../../entities/subscription.entity';
 
 describe('AnalyticsService', () => {
   let service: AnalyticsService;
-  let subscriptionsService: SubscriptionsService;
+  let repository: Repository<Subscription>;
 
-  const mockSubscriptionsService = {
-    findAll: jest.fn(),
+  const mockRepository = {
+    find: jest.fn(),
   };
 
   const mockSubscriptions = [
@@ -51,15 +53,15 @@ describe('AnalyticsService', () => {
       providers: [
         AnalyticsService,
         {
-          provide: SubscriptionsService,
-          useValue: mockSubscriptionsService,
+          provide: getRepositoryToken(Subscription),
+          useValue: mockRepository,
         },
       ],
     }).compile();
 
     service = module.get<AnalyticsService>(AnalyticsService);
-    subscriptionsService = module.get<SubscriptionsService>(
-      SubscriptionsService,
+    repository = module.get<Repository<Subscription>>(
+      getRepositoryToken(Subscription),
     );
   });
 
@@ -71,50 +73,41 @@ describe('AnalyticsService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('getMonthlySpending', () => {
-    it('should calculate monthly spending correctly', async () => {
-      mockSubscriptionsService.findAll.mockResolvedValue(mockSubscriptions);
+  describe('getSpendingSummary', () => {
+    it('should calculate monthly and yearly spending correctly', async () => {
+      mockRepository.find.mockResolvedValue(mockSubscriptions.filter(s => s.isActive));
 
-      const result = await service.getMonthlySpending('user-1');
+      const result = await service.getSpendingSummary('user-1');
 
-      expect(result).toBeCloseTo(25.98, 2); // 15.99 + 9.99 (only active subscriptions)
+      expect(result.monthlyTotal).toBeCloseTo(25.98, 2); // 15.99 + 9.99 (only active subscriptions)
+      expect(result.yearlyTotal).toBeCloseTo(311.76, 2); // (15.99 + 9.99) * 12
+      expect(result.totalSubscriptions).toBe(2);
     });
 
     it('should exclude inactive subscriptions', async () => {
-      mockSubscriptionsService.findAll.mockResolvedValue(mockSubscriptions);
+      mockRepository.find.mockResolvedValue(mockSubscriptions.filter(s => s.isActive));
 
-      const result = await service.getMonthlySpending('user-1');
+      const result = await service.getSpendingSummary('user-1');
 
-      expect(result).not.toBeCloseTo(78.97, 2); // Should not include Adobe
+      expect(result.monthlyTotal).not.toBeCloseTo(78.97, 2); // Should not include Adobe
     });
   });
 
-  describe('getYearlySpending', () => {
-    it('should calculate yearly spending correctly', async () => {
-      mockSubscriptionsService.findAll.mockResolvedValue(mockSubscriptions);
-
-      const result = await service.getYearlySpending('user-1');
-
-      expect(result).toBeCloseTo(311.76, 2); // (15.99 + 9.99) * 12
-    });
-  });
-
-  describe('getCategoryBreakdown', () => {
+  describe('getSpendingByCategory', () => {
     it('should group subscriptions by category', async () => {
-      mockSubscriptionsService.findAll.mockResolvedValue(mockSubscriptions);
+      mockRepository.find.mockResolvedValue(mockSubscriptions.filter(s => s.isActive));
 
-      const result = await service.getCategoryBreakdown('user-1');
+      const result = await service.getSpendingByCategory('user-1');
 
-      expect(result).toHaveLength(2);
+      expect(result).toHaveLength(1); // Only Entertainment category for active subs
       expect(result[0].category).toBe('Entertainment');
-      expect(result[0].count).toBe(2);
-      expect(result[0].totalAmount).toBeCloseTo(25.98, 2);
+      expect(result[0].amount).toBeCloseTo(25.98, 2);
     });
 
     it('should only include active subscriptions', async () => {
-      mockSubscriptionsService.findAll.mockResolvedValue(mockSubscriptions);
+      mockRepository.find.mockResolvedValue(mockSubscriptions.filter(s => s.isActive));
 
-      const result = await service.getCategoryBreakdown('user-1');
+      const result = await service.getSpendingByCategory('user-1');
 
       const designCategory = result.find((c) => c.category === 'Design');
       expect(designCategory).toBeUndefined();

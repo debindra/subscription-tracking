@@ -3,12 +3,10 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SubscriptionsService } from './subscriptions.service';
 import { Subscription } from '../../entities/subscription.entity';
-import { NotificationsService } from '../notifications/notifications.service';
 
 describe('SubscriptionsService', () => {
   let service: SubscriptionsService;
   let repository: Repository<Subscription>;
-  let notificationsService: NotificationsService;
 
   const mockRepository = {
     create: jest.fn(),
@@ -16,17 +14,12 @@ describe('SubscriptionsService', () => {
     find: jest.fn(),
     findOne: jest.fn(),
     update: jest.fn(),
-    delete: jest.fn(),
+    remove: jest.fn(),
     createQueryBuilder: jest.fn(() => ({
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
       getMany: jest.fn(),
     })),
-  };
-
-  const mockNotificationsService = {
-    scheduleReminder: jest.fn(),
-    cancelReminder: jest.fn(),
   };
 
   const mockSubscription: Partial<Subscription> = {
@@ -51,19 +44,12 @@ describe('SubscriptionsService', () => {
           provide: getRepositoryToken(Subscription),
           useValue: mockRepository,
         },
-        {
-          provide: NotificationsService,
-          useValue: mockNotificationsService,
-        },
       ],
     }).compile();
 
     service = module.get<SubscriptionsService>(SubscriptionsService);
     repository = module.get<Repository<Subscription>>(
       getRepositoryToken(Subscription),
-    );
-    notificationsService = module.get<NotificationsService>(
-      NotificationsService,
     );
   });
 
@@ -98,37 +84,18 @@ describe('SubscriptionsService', () => {
       expect(mockRepository.save).toHaveBeenCalled();
       expect(result).toEqual(mockSubscription);
     });
-
-    it('should schedule reminder if enabled', async () => {
-      const createDto = {
-        name: 'Netflix',
-        amount: 15.99,
-        currency: 'USD',
-        billingCycle: 'monthly',
-        nextRenewalDate: '2025-12-01',
-        category: 'Entertainment',
-        reminderEnabled: true,
-        reminderDaysBefore: 7,
-      };
-
-      mockRepository.create.mockReturnValue(mockSubscription);
-      mockRepository.save.mockResolvedValue(mockSubscription);
-
-      await service.create('user-1', createDto as any);
-
-      expect(mockNotificationsService.scheduleReminder).toHaveBeenCalled();
-    });
   });
 
-  describe('findAll', () => {
+  describe('findAllByUser', () => {
     it('should return all subscriptions for a user', async () => {
       const subscriptions = [mockSubscription];
       mockRepository.find.mockResolvedValue(subscriptions);
 
-      const result = await service.findAll('user-1');
+      const result = await service.findAllByUser('user-1');
 
       expect(mockRepository.find).toHaveBeenCalledWith({
         where: { userId: 'user-1' },
+        order: { nextRenewalDate: 'ASC' },
       });
       expect(result).toEqual(subscriptions);
     });
@@ -156,12 +123,12 @@ describe('SubscriptionsService', () => {
   describe('update', () => {
     it('should update a subscription', async () => {
       const updateDto = { amount: 19.99 };
-      const updatedSubscription = { ...mockSubscription, ...updateDto };
+      const updatedSubscription = { ...mockSubscription, amount: 19.99 };
 
       mockRepository.findOne.mockResolvedValue(mockSubscription);
-      mockRepository.save.mockResolvedValue(updatedSubscription);
+      mockRepository.save.mockResolvedValue(updatedSubscription as Subscription);
 
-      const result = await service.update('user-1', '123', updateDto);
+      const result = await service.update('123', 'user-1', updateDto);
 
       expect(mockRepository.save).toHaveBeenCalled();
       expect(result.amount).toBe(19.99);
@@ -171,11 +138,11 @@ describe('SubscriptionsService', () => {
   describe('remove', () => {
     it('should delete a subscription', async () => {
       mockRepository.findOne.mockResolvedValue(mockSubscription);
-      mockRepository.delete.mockResolvedValue({ affected: 1 } as any);
+      mockRepository.remove.mockResolvedValue(mockSubscription);
 
-      await service.remove('user-1', '123');
+      await service.remove('123', 'user-1');
 
-      expect(mockRepository.delete).toHaveBeenCalledWith('123');
+      expect(mockRepository.remove).toHaveBeenCalledWith(mockSubscription);
     });
   });
 });

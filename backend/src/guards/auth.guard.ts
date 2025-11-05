@@ -23,6 +23,12 @@ export class AuthGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
+    
+    // Allow OPTIONS requests (CORS preflight) to pass through
+    if (request.method === 'OPTIONS') {
+      return true;
+    }
+
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
