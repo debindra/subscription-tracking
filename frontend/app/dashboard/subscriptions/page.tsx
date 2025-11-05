@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { subscriptionsApi, Subscription, CreateSubscriptionData } from '@/lib/api/subscriptions';
 import { SubscriptionCard } from '@/components/dashboard/SubscriptionCard';
 import { SubscriptionForm } from '@/components/dashboard/SubscriptionForm';
+import { ExportButton } from '@/components/dashboard/ExportButton';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 
@@ -83,6 +84,27 @@ export default function SubscriptionsPage() {
     return true;
   });
 
+  // Calculate totals for export
+  const { monthlyTotal, yearlyTotal } = useMemo(() => {
+    const monthly = subscriptions
+      .filter(s => s.isActive)
+      .reduce((sum, sub) => {
+        const { amount, billingCycle } = sub;
+        let monthlyAmount = amount;
+        
+        if (billingCycle === 'yearly') monthlyAmount = amount / 12;
+        else if (billingCycle === 'quarterly') monthlyAmount = amount / 3;
+        else if (billingCycle === 'weekly') monthlyAmount = amount * 4.33;
+        
+        return sum + monthlyAmount;
+      }, 0);
+    
+    return {
+      monthlyTotal: monthly,
+      yearlyTotal: monthly * 12,
+    };
+  }, [subscriptions]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -99,12 +121,21 @@ export default function SubscriptionsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Subscriptions</h1>
-          <p className="text-gray-600 mt-1">Manage all your subscriptions</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Subscriptions</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage all your subscriptions</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>
-          + Add Subscription
-        </Button>
+        <div className="flex space-x-3">
+          {subscriptions.length > 0 && (
+            <ExportButton
+              subscriptions={subscriptions}
+              monthlyTotal={monthlyTotal}
+              yearlyTotal={yearlyTotal}
+            />
+          )}
+          <Button onClick={() => setIsModalOpen(true)}>
+            + Add Subscription
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -113,8 +144,8 @@ export default function SubscriptionsPage() {
           onClick={() => setFilter('all')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'all'
-              ? 'bg-primary-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50'
+              ? 'bg-primary-600 dark:bg-primary-500 text-white'
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
           }`}
         >
           All ({subscriptions.length})
@@ -123,8 +154,8 @@ export default function SubscriptionsPage() {
           onClick={() => setFilter('active')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'active'
-              ? 'bg-primary-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50'
+              ? 'bg-primary-600 dark:bg-primary-500 text-white'
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
           }`}
         >
           Active ({subscriptions.filter((s) => s.isActive).length})
@@ -133,8 +164,8 @@ export default function SubscriptionsPage() {
           onClick={() => setFilter('inactive')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'inactive'
-              ? 'bg-primary-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50'
+              ? 'bg-primary-600 dark:bg-primary-500 text-white'
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
           }`}
         >
           Inactive ({subscriptions.filter((s) => !s.isActive).length})
@@ -154,12 +185,12 @@ export default function SubscriptionsPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-md p-12 text-center">
-          <div className="text-gray-400 text-6xl mb-4">📋</div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
+          <div className="text-gray-400 dark:text-gray-600 text-6xl mb-4">📋</div>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             No subscriptions found
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
             {filter !== 'all'
               ? `You don't have any ${filter} subscriptions.`
               : 'Get started by adding your first subscription.'}
