@@ -7,6 +7,7 @@ import { SubscriptionForm } from '@/components/dashboard/SubscriptionForm';
 import { ExportButton } from '@/components/dashboard/ExportButton';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/lib/context/ToastContext';
 
 export default function SubscriptionsPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -14,6 +15,7 @@ export default function SubscriptionsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | undefined>();
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadSubscriptions();
@@ -24,6 +26,7 @@ export default function SubscriptionsPage() {
       const response = await subscriptionsApi.getAll();
       setSubscriptions(response.data);
     } catch (error) {
+      showToast('Failed to load subscriptions', 'error');
       console.error('Error loading subscriptions:', error);
     } finally {
       setLoading(false);
@@ -35,7 +38,9 @@ export default function SubscriptionsPage() {
       await subscriptionsApi.create(data);
       await loadSubscriptions();
       setIsModalOpen(false);
+      showToast('Subscription created successfully!', 'success');
     } catch (error) {
+      showToast('Failed to create subscription', 'error');
       console.error('Error creating subscription:', error);
       throw error;
     }
@@ -49,7 +54,9 @@ export default function SubscriptionsPage() {
       await loadSubscriptions();
       setIsModalOpen(false);
       setEditingSubscription(undefined);
+      showToast('Subscription updated successfully!', 'success');
     } catch (error) {
+      showToast('Failed to update subscription', 'error');
       console.error('Error updating subscription:', error);
       throw error;
     }
@@ -63,7 +70,9 @@ export default function SubscriptionsPage() {
     try {
       await subscriptionsApi.delete(id);
       await loadSubscriptions();
+      showToast('Subscription deleted successfully', 'success');
     } catch (error) {
+      showToast('Failed to delete subscription', 'error');
       console.error('Error deleting subscription:', error);
     }
   };
@@ -107,10 +116,40 @@ export default function SubscriptionsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          <p className="mt-4 text-gray-600">Loading subscriptions...</p>
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-2">
+            <div className="h-9 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-shimmer"></div>
+            <div className="h-5 w-80 bg-gray-200 dark:bg-gray-700 rounded animate-shimmer"></div>
+          </div>
+          <div className="flex space-x-3">
+            <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-shimmer"></div>
+            <div className="h-10 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-shimmer"></div>
+          </div>
+        </div>
+        <div className="flex space-x-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-shimmer"></div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center space-x-3 flex-1">
+                  <div className="w-12 h-12 rounded-xl bg-gray-200 dark:bg-gray-700 animate-shimmer"></div>
+                  <div className="space-y-2 flex-1">
+                    <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-shimmer"></div>
+                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-shimmer"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded animate-shimmer"></div>
+                <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded animate-shimmer"></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
